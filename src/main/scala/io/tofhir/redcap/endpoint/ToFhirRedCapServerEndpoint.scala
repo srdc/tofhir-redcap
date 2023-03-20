@@ -11,6 +11,8 @@ import io.tofhir.redcap.server.interceptor.{ICORSHandler, IErrorHandler}
  */
 class ToFhirRedCapServerEndpoint(webServerConfig: WebServerConfig) extends ICORSHandler with IErrorHandler {
 
+  val notificationEndpoint = new NotificationEndpoint()
+
   lazy val toFHIRRoute: Route =
     pathPrefix(webServerConfig.baseUri) {
       corsHandler {
@@ -20,7 +22,7 @@ class ToFhirRedCapServerEndpoint(webServerConfig: WebServerConfig) extends ICORS
               optionalHeaderValueByName("X-Correlation-Id") { _ =>
                 handleRejections(RejectionHandler.default) { // Default rejection handling
                   handleExceptions(exceptionHandler()) { // Handle exceptions
-                    // TODO: implement the route to handle notifications
+                    notificationEndpoint.route()
                   }
                 }
               }

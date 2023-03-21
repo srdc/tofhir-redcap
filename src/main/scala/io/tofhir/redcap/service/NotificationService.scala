@@ -12,6 +12,8 @@ import scala.concurrent.Future
  * */
 class NotificationService {
 
+  // Kafka service to publish record to a Kafka topic
+  val kafkaService: KafkaService = new KafkaService()
   // REDCap API client to export record details
   val redCapClient: RedCapClient = new RedCapClient()
 
@@ -28,7 +30,9 @@ class NotificationService {
     val token: String = getRedCapProjectToken(projectId)
 
     redCapClient.exportRecord(token, recordId, instrument).map(record => {
-      // TODO: publish it to Kafka topic
+      // project id and form name are concatenated to create a unique topic name
+      val topic: String = s"$projectId-$instrument"
+      kafkaService.publishRedCapRecord(topic, record, recordId)
     })
   }
 

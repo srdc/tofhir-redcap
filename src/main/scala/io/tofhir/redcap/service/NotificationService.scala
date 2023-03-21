@@ -1,14 +1,19 @@
 package io.tofhir.redcap.service
 
+import io.tofhir.redcap.client.RedCapClient
 import io.tofhir.redcap.config.{RedCapProjectConfig, ToFhirRedCapConfig}
 import io.tofhir.redcap.model.BadRequest
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 /**
  * Service to handle a REDCap Notification which is sent by REDCap whenever a new record is created or an existing one is updated.
  * */
 class NotificationService {
+
+  // REDCap API client to export record details
+  val redCapClient: RedCapClient = new RedCapClient()
 
   /**
    * Handles the REDCap notification for an updated/created record. It extracts the record id from the given form fields and
@@ -21,8 +26,10 @@ class NotificationService {
     val projectId: String = formDataFields(RedCapNotificationFormFields.PROJECT_ID)
     val instrument: String = formDataFields(RedCapNotificationFormFields.INSTRUMENT)
     val token: String = getRedCapProjectToken(projectId)
-    // TODO: export record and publish it to Kafka topic
-    Future.successful()
+
+    redCapClient.exportRecord(token, recordId, instrument).map(record => {
+      // TODO: publish it to Kafka topic
+    })
   }
 
   /**

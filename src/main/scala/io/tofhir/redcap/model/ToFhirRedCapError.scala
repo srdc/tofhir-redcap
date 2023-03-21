@@ -51,3 +51,7 @@ case class BadRequest(title: String, detail: String, override val cause: Option[
 case class InternalRedCapError(title: String, detail: String, override val cause: Option[Throwable] = None) extends ToFhirRedCapError {
   val statusCode = 500
 }
+
+case class GatewayTimeout(title: String, detail: String, override val cause: Option[Throwable] = None) extends ToFhirRedCapError {
+  val statusCode = 504
+}

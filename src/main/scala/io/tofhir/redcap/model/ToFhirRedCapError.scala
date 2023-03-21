@@ -44,6 +44,10 @@ abstract class ToFhirRedCapError extends Exception {
 
 }
 
+case class BadRequest(title: String, detail: String, override val cause: Option[Throwable] = None) extends ToFhirRedCapError {
+  val statusCode = 400
+}
+
 case class InternalRedCapError(title: String, detail: String, override val cause: Option[Throwable] = None) extends ToFhirRedCapError {
   val statusCode = 500
 }

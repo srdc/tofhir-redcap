@@ -1,5 +1,8 @@
 package io.tofhir.redcap.service
 
+import io.tofhir.redcap.config.{RedCapProjectConfig, ToFhirRedCapConfig}
+import io.tofhir.redcap.model.BadRequest
+
 import scala.concurrent.Future
 
 /**
@@ -27,10 +30,13 @@ class NotificationService {
    *
    * @param projectId REDCap project id
    * @return API token for the project
+   * @throws BadRequest if there is no configuration for the given project
    * */
   private def getRedCapProjectToken(projectId: String): String = {
-    // TODO: implement this method
-    ""
+    val projectConfig: Option[RedCapProjectConfig] = ToFhirRedCapConfig.redCapProjectsConfig.find(p => p.id.contentEquals(projectId))
+    if (projectConfig.isEmpty)
+      throw BadRequest("Invalid Project !", s"Project configuration is missing for project '$projectId'")
+    projectConfig.get.token
   }
 }
 

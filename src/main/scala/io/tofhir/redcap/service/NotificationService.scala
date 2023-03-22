@@ -24,16 +24,22 @@ class NotificationService {
    * @param formDataFields Form fields of a REDCap notification
    */
   def handleNotification(formDataFields: Map[String, String]): Future[Unit] = {
-    val recordId: String = formDataFields(RedCapNotificationFormFields.RECORD)
-    val projectId: String = formDataFields(RedCapNotificationFormFields.PROJECT_ID)
-    val instrument: String = formDataFields(RedCapNotificationFormFields.INSTRUMENT)
-    val token: String = getRedCapProjectToken(projectId)
+    // form data can be empty when the endpoint is tested while setting up Data Entry Trigger functionality of REDCap
+    if(formDataFields.isEmpty){
+      Future.successful()
+    }
+    else {
+      val recordId: String = formDataFields(RedCapNotificationFormFields.RECORD)
+      val projectId: String = formDataFields(RedCapNotificationFormFields.PROJECT_ID)
+      val instrument: String = formDataFields(RedCapNotificationFormFields.INSTRUMENT)
+      val token: String = getRedCapProjectToken(projectId)
 
-    redCapClient.exportRecord(token, recordId, instrument).map(record => {
-      // project id and form name are concatenated to create a unique topic name
-      val topic: String = s"$projectId-$instrument"
-      kafkaService.publishRedCapRecord(topic, record, recordId)
-    })
+      redCapClient.exportRecord(token, recordId, instrument).map(record => {
+        // project id and form name are concatenated to create a unique topic name
+        val topic: String = s"$projectId-$instrument"
+        kafkaService.publishRedCapRecord(topic, record, recordId)
+      })
+    }
   }
 
   /**

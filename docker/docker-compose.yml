@@ -1,0 +1,9 @@
+version: '3'
+services:
+  tofhir-redcap:
+    image: tofhir-redcap
+    container_name: tofhir-redcap
+    build: .
+    ports:
+      - 8095:8095
+    restart: always

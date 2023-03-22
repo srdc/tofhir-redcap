@@ -7,6 +7,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import com.typesafe.scalalogging.LazyLogging
+import io.tofhir.redcap.endpoint.NotificationEndpoint
 import io.tofhir.redcap.server.config.WebServerConfig
 
 import scala.concurrent._
@@ -46,6 +47,7 @@ object ToFhirRedCapHttpServer extends LazyLogging {
     try {
       serverBinding = Some(Await.result(serverBindingFuture, FiniteDuration(10L, TimeUnit.SECONDS)))
       logger.info(s"tofHIR-REDCap server ready at ${webServerConfig.serverHost}:${webServerConfig.serverPort}")
+      logger.info(s"URL for Data Entry Trigger is ${webServerConfig.serverLocation}/${webServerConfig.baseUri}/${NotificationEndpoint.SEGMENT_NOTIFICATION}")
     } catch {
       case e: Exception =>
         logger.error("Problem while binding to the given HTTP address and port!", e)

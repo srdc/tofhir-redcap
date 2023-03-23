@@ -1,0 +1,11 @@
+### IntelliJ ###
+.idea/
+
+### Maven ###
+target/
+
+## Logs ###
+logs/
+
+## Jar ###
+docker/tofhir-redcap-standalone.jar

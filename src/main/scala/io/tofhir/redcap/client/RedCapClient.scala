@@ -36,7 +36,7 @@ class RedCapClient {
       Multipart.FormData.BodyPart.Strict("type", "flat"), // output as one record per row
       Multipart.FormData.BodyPart.Strict("records", s"$recordId"), // the list of records to be exported
       Multipart.FormData.BodyPart.Strict("forms",s"${instrument.replaceAll(" ","_")}"), // the list of forms for which records will be pulled
-      Multipart.FormData.BodyPart.Strict("rawOrLabel", "label"), // export labels for the options of multiple choice fields
+      Multipart.FormData.BodyPart.Strict("rawOrLabel", "raw"), // export labels for the options of multiple choice fields
       Multipart.FormData.BodyPart.Strict("rawOrLabelHeaders", "raw"), //export the variable/field names instead of field labels
       Multipart.FormData.BodyPart.Strict("exportCheckboxLabel", "true"), // export labels for checkboxes instead of Checked or Unchecked
       Multipart.FormData.BodyPart.Strict("exportSurveyFields", "false"), // no need to export survey fields

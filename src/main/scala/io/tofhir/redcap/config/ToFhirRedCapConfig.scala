@@ -19,6 +19,8 @@ object ToFhirRedCapConfig {
   lazy val redCapConfig: Config = config.getConfig("redcap")
   /* REDCap API Url */
   lazy val redCapUrl: String = redCapConfig.getString("url")
+  /* Whether REDCap records should be published to Kafka at the startup of server */
+  lazy val publishRecordsAtStartup: Boolean = redCapConfig.getBoolean("publishRecordsAtStartup")
   /* Configuration of REDCap projects*/
   lazy val redCapProjectsConfig: List[RedCapProjectConfig] = redCapConfig.getConfigList("projects")
     .asScala

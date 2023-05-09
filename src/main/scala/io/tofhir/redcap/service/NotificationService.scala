@@ -1,5 +1,6 @@
 package io.tofhir.redcap.service
 
+import com.typesafe.scalalogging.LazyLogging
 import io.tofhir.redcap.client.RedCapClient
 import io.tofhir.redcap.config.{RedCapProjectConfig, ToFhirRedCapConfig}
 import io.tofhir.redcap.model.BadRequest
@@ -10,12 +11,18 @@ import scala.concurrent.Future
 /**
  * Service to handle a REDCap Notification which is sent by REDCap whenever a new record is created or an existing one is updated.
  * */
-class NotificationService {
+class NotificationService extends LazyLogging {
 
   // Kafka service to publish record to a Kafka topic
   val kafkaService: KafkaService = new KafkaService()
   // REDCap API client to export record details
   val redCapClient: RedCapClient = new RedCapClient()
+
+  // handle 'redcap.publishRecordsAtStartup' configuration
+  if (ToFhirRedCapConfig.publishRecordsAtStartup) {
+    logger.info("'redcap.publishRecordsAtStartup' is enabled. Will export REDCap records and publish them to Kafka...")
+    handleStartUpNotification()
+  }
 
   /**
    * Handles the REDCap notification for an updated/created record. It extracts the record id from the given form fields and
@@ -25,7 +32,7 @@ class NotificationService {
    */
   def handleNotification(formDataFields: Map[String, String]): Future[Unit] = {
     // form data can be empty when the endpoint is tested while setting up Data Entry Trigger functionality of REDCap
-    if(formDataFields.isEmpty){
+    if (formDataFields.isEmpty) {
       Future.successful()
     }
     else {
@@ -35,9 +42,7 @@ class NotificationService {
       val token: String = getRedCapProjectToken(projectId)
 
       redCapClient.exportRecord(token, recordId, instrument).map(record => {
-        // project id and form name are concatenated to create a unique topic name
-        val topic: String = s"$projectId-$instrument"
-        kafkaService.publishRedCapRecord(topic, record, recordId)
+        kafkaService.publishRedCapRecord(getTopicName(projectId, instrument), record, Some(recordId))
       })
     }
   }
@@ -54,6 +59,38 @@ class NotificationService {
     if (projectConfig.isEmpty)
       throw BadRequest("Invalid Project !", s"Project configuration is missing for project '$projectId'")
     projectConfig.get.token
+  }
+
+  /**
+   * This is the method to be called at the startup of server if we would like to retrieve all REDCap records and publish
+   * them to Kafka.
+   */
+  private def handleStartUpNotification(): Unit = {
+    // traverse the configured projects to publish their data to Kafka
+    ToFhirRedCapConfig.redCapProjectsConfig.foreach(projectConfig => {
+      // export project instruments
+      redCapClient.exportInstruments(projectConfig.token).map(instruments => {
+        // for each instrument export records
+        instruments.foreach(instrument => {
+          redCapClient.exportRecords(projectConfig.token, instrument.instrument_name).map(records => {
+            // publish them to Kafka
+            kafkaService.publishRedCapRecords(getTopicName(projectConfig.id, instrument.instrument_name), records)
+          })
+        })
+      })
+    })
+  }
+
+  /**
+   * Returns the Kafka topic name for the given project and instrument. Project id and instrument name are concatenated
+   * to create a unique topic name.
+   *
+   * @param projectId  the identifier of REDCap project
+   * @param instrument the name of instrument
+   * @return the corresponding Kafka topic name
+   * */
+  private def getTopicName(projectId: String, instrument: String): String = {
+    s"$projectId-$instrument"
   }
 }
 

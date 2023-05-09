@@ -9,6 +9,8 @@ import akka.stream.StreamTcpException
 import io.tofhir.redcap.Execution.actorSystem
 import io.tofhir.redcap.config.ToFhirRedCapConfig
 import io.tofhir.redcap.model.GatewayTimeout
+import io.tofhir.redcap.model.json.Json4sSupport._
+import org.json4s.JsonAST.{JArray, JValue}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -24,10 +26,10 @@ class RedCapClient {
    * @param token    The API token
    * @param recordId The identifier of record whose details will be fetched
    * @param instrument The name of instrument to which record belongs to
-   * @return the serialization of record details
+   * @return record details as JValue
    * @throws GatewayTimeout when it does not connect to REDCap to retrieve record details
    * */
-  def exportRecord(token: String, recordId: String, instrument: String): Future[String] = {
+  def exportRecord(token: String, recordId: String, instrument: String): Future[JValue] = {
     // create form data to export record
     val formData = Multipart.FormData(
       Multipart.FormData.BodyPart.Strict("token", token),
@@ -54,7 +56,8 @@ class RedCapClient {
       .singleRequest(httpRequest)
       .flatMap {
         case HttpResponse(StatusCodes.OK, _, entity, _) =>
-          Unmarshal(entity).to[String].map(str => str.substring(1,str.length-1)) // get rid of array brackets to return serialization of record
+          // the record is returned in an array, therefore get the first element
+          Unmarshal(entity).to[JArray].map(arr => arr.apply(0))
       }.recover {
       case e: StreamTcpException => e.getCause match {
         case e: ConnectException => throw GatewayTimeout("REDCap unavailable!", "Can not connect to REDCap to retrieve record details.", Some(e))

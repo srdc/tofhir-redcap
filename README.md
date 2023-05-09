@@ -35,4 +35,69 @@ to a Kafka topic which is the concatenation of project id and instrument name su
 
 # Configuration
 Please see [application.conf](src/main/resources/application.conf) for the configurations. It allows you to configure Web server settings, Kafka
-and REDCap projects.
+and REDCap projects. 
+
+Here is the list of available configurations:
+
+<table>
+    <tr>
+        <td> Config </td> 
+        <td> Description </td>
+        <td> Default Value </td>
+    </tr>
+    <tr>
+        <td> webserver.host </td> 
+        <td> Hostname that toFHIR-REDCap server will work. Using 0.0.0.0 will bind the server to both localhost and the IP of the server that you deploy it. </td>
+        <td> 0.0.0.0 </td>
+    </tr>
+    <tr>
+        <td> webserver.port </td> 
+        <td> Port to listen </td>
+        <td> 8095 </td>
+    </tr>
+    <tr>
+        <td> webserver.base-uri </td> 
+        <td> Base Uri for server e.g. With this default configuration, the root path of toFHIR REDCap server will be http://localhost:8095/tofhir-redcap </td>
+        <td> tofhir-redcap </td>
+    </tr>
+    <tr>
+        <td> webserver.ssl.keystore </td> 
+        <td> Path to the java keystore for enabling ssl for toFHIR server, use null to disable ssl </td>
+        <td> null </td>
+    </tr>
+    <tr>
+        <td> webserver.ssl.password </td> 
+        <td> Password of the keystore for enabling ssl for toFHIR server </td>
+        <td> null </td>
+    </tr>
+    <tr>
+        <td> kafka.bootstrap-servers </td> 
+        <td> Kafka servers separated by comma </td>
+        <td> localhost:9092 </td>
+    </tr>
+    <tr>
+        <td> redcap.url </td> 
+        <td> REDCap API url </td>
+        <td> http://localhost:3000 </td>
+    </tr>
+    <tr>
+        <td> redcap.publishRecordsAtStartup </td> 
+        <td> Flag to export REDCap records and publish them to Kafka at the startup of server. Only records from the configured projects will be exported </td>
+        <td> false </td>
+     </tr>
+    <tr>
+        <td> redcap.projects </td>
+        <td>The configuration of REDCap projects. Each project configuration should include the project id and API token. For example:
+     
+ ```json
+ [
+    {    
+        id = "<PROJECT_ID>"    
+        token = "<PROJECT_TOKEN>" 
+    }
+]
+ ```
+ </td>
+<td> [] </td>
+ </tr>
+</table>

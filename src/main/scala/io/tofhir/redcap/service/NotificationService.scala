@@ -29,6 +29,7 @@ class NotificationService extends LazyLogging {
    * makes a call to REDCap API to export record details. Then, it publishes the record to corresponding Kafka topic.
    *
    * @param formDataFields Form fields of a REDCap notification
+   * @throws BadRequest when one of mandatory keys of the from data is missing
    */
   def handleNotification(formDataFields: Map[String, String]): Future[Unit] = {
     // form data can be empty when the endpoint is tested while setting up Data Entry Trigger functionality of REDCap
@@ -36,6 +37,8 @@ class NotificationService extends LazyLogging {
       Future.successful()
     }
     else {
+      if (formDataFields.contains(RedCapNotificationFormFields.RECORD) || formDataFields.contains(RedCapNotificationFormFields.RECORD) || formDataFields.contains(RedCapNotificationFormFields.INSTRUMENT))
+        throw BadRequest("Invalid Form Data !", s"One of the mandatory keys '${RedCapNotificationFormFields.RECORD}', '${RedCapNotificationFormFields.PROJECT_ID}' or '${RedCapNotificationFormFields.INSTRUMENT}' is missing in the form data of the notification request.")
       val recordId: String = formDataFields(RedCapNotificationFormFields.RECORD)
       val projectId: String = formDataFields(RedCapNotificationFormFields.PROJECT_ID)
       val instrument: String = formDataFields(RedCapNotificationFormFields.INSTRUMENT)

@@ -26,7 +26,7 @@ trait IErrorHandler extends LazyLogging {
    */
   private def exceptionToResponse: PartialFunction[Exception, ToFhirRedCapError] = {
     case e: ToFhirRedCapError =>
-      logger.error(s"toFHIR-REDCap error encountered.", e)
+      logger.error(s"toFHIR-REDCap error encountered: ${e.title} ${e.detail}", e)
       e
     case e: Exception =>
       logger.error("Unexpected internal error", e)

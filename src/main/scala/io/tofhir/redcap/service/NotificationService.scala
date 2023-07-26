@@ -37,7 +37,7 @@ class NotificationService extends LazyLogging {
       Future.successful()
     }
     else {
-      if (formDataFields.contains(RedCapNotificationFormFields.RECORD) || formDataFields.contains(RedCapNotificationFormFields.RECORD) || formDataFields.contains(RedCapNotificationFormFields.INSTRUMENT))
+      if (!formDataFields.contains(RedCapNotificationFormFields.RECORD) || !formDataFields.contains(RedCapNotificationFormFields.PROJECT_ID) || !formDataFields.contains(RedCapNotificationFormFields.INSTRUMENT))
         throw BadRequest("Invalid Form Data !", s"One of the mandatory keys '${RedCapNotificationFormFields.RECORD}', '${RedCapNotificationFormFields.PROJECT_ID}' or '${RedCapNotificationFormFields.INSTRUMENT}' is missing in the form data of the notification request.")
       val recordId: String = formDataFields(RedCapNotificationFormFields.RECORD)
       val projectId: String = formDataFields(RedCapNotificationFormFields.PROJECT_ID)

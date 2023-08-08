@@ -44,7 +44,7 @@ class NotificationService extends LazyLogging {
       val instrument: String = formDataFields(RedCapNotificationFormFields.INSTRUMENT)
       val token: String = getRedCapProjectToken(projectId)
 
-      redCapClient.exportRecord(token, recordId, instrument).map(record => {
+      redCapClient.exportRecord(token, recordId, instrument, projectId).map(record => {
         kafkaService.publishRedCapRecord(getTopicName(projectId, instrument), record, Some(recordId))
       })
     }
@@ -75,7 +75,7 @@ class NotificationService extends LazyLogging {
       redCapClient.exportInstruments(projectConfig.token).map(instruments => {
         // for each instrument export records
         instruments.foreach(instrument => {
-          redCapClient.exportRecords(projectConfig.token, instrument.instrument_name).map(records => {
+          redCapClient.exportRecords(projectConfig.token, instrument.instrument_name, projectConfig.id).map(records => {
             // publish them to Kafka
             kafkaService.publishRedCapRecords(getTopicName(projectConfig.id, instrument.instrument_name), records)
           })

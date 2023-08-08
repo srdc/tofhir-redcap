@@ -9,7 +9,7 @@ import akka.stream.StreamTcpException
 import io.tofhir.redcap.Execution.actorSystem
 import io.tofhir.redcap.config.ToFhirRedCapConfig
 import io.tofhir.redcap.model.json.Json4sSupport._
-import io.tofhir.redcap.model.{GatewayTimeout, Instrument, InternalRedCapError}
+import io.tofhir.redcap.model.{BadRequest, GatewayTimeout, Instrument, InternalRedCapError}
 import org.json4s.JsonAST.{JArray, JValue}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -26,19 +26,27 @@ class RedCapClient {
    * @param token      The API token
    * @param recordId   The identifier of record whose details will be fetched
    * @param instrument The name of instrument to which record belongs to
+   * @param projectId  The identifier of project to which record belongs to
    * @return record details as JValue
    * @throws GatewayTimeout when it can not connect to REDCap to retrieve record details
    * @throws InternalRedCapError when it can not resolve the IP address of REDCAP API URL
    * */
-  def exportRecord(token: String, recordId: String, instrument: String): Future[JValue] = {
+  def exportRecord(token: String, recordId: String, instrument: String, projectId: String): Future[JValue] = {
     val httpRequest = getREDCapHttpRequest(token, Some(instrument), Some(recordId))
 
     Http()
       .singleRequest(httpRequest)
       .flatMap {
         case HttpResponse(StatusCodes.OK, _, entity, _) =>
-          // the record is returned in an array, therefore get the first element
-          Unmarshal(entity).to[JArray].map(arr => arr.apply(0))
+          Unmarshal(entity).to[JArray].map(arr => {
+            if (arr.arr.isEmpty)
+              throw BadRequest("No record exported!", s"Either the record '$recordId' for instrument '$instrument' in project '$projectId' does not exist or the token does not belong to the project '$projectId'")
+            // the record is returned in an array, therefore get the first element
+            arr.apply(0)
+          })
+        case HttpResponse(StatusCodes.Forbidden, _, entity, _) =>
+          val msg = entity.asInstanceOf[HttpEntity.Strict].data.utf8String
+          throw BadRequest("Permission error!", s"Token for project '$projectId' does not have permission to export a REDCap record. The error message from REDCap Export Record API is $msg")
       }.recover {
       case e: StreamTcpException => e.getCause match {
         case e: ConnectException => throw GatewayTimeout("REDCap unavailable!", "Can not connect to REDCap to retrieve record details.", Some(e))
@@ -52,11 +60,12 @@ class RedCapClient {
    *
    * @param token      The API token
    * @param instrument The name of instrument to which records belong to
+   * @param projectId  The identifier of project to which instrument belongs to
    * @return records as JArray
    * @throws GatewayTimeout when it can not connect to REDCap
    * @throws InternalRedCapError when it can not resolve the IP address of REDCAP API URL
    * */
-  def exportRecords(token: String, instrument: String): Future[JArray] = {
+  def exportRecords(token: String, instrument: String, projectId: String): Future[JArray] = {
     val httpRequest = getREDCapHttpRequest(token, Some(instrument))
 
     Http()
@@ -64,6 +73,9 @@ class RedCapClient {
       .flatMap {
         case HttpResponse(StatusCodes.OK, _, entity, _) =>
           Unmarshal(entity).to[JArray]
+        case HttpResponse(StatusCodes.Forbidden, _, entity, _) =>
+          val msg = entity.asInstanceOf[HttpEntity.Strict].data.utf8String
+          throw BadRequest("Permission error!", s"Token for project '$projectId' does not have permission to export REDCap records. The error message from REDCap Export Record API is $msg")
       }.recover {
       case e: StreamTcpException => e.getCause match {
         case e: ConnectException => throw GatewayTimeout("REDCap unavailable!", "Can not connect to REDCap to export records.", Some(e))

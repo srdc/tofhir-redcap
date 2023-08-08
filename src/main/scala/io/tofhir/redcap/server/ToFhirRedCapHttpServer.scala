@@ -1,7 +1,5 @@
 package io.tofhir.redcap.server
 
-import java.util.concurrent.TimeUnit
-
 import akka.Done
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -10,6 +8,7 @@ import com.typesafe.scalalogging.LazyLogging
 import io.tofhir.redcap.endpoint.NotificationEndpoint
 import io.tofhir.redcap.server.config.WebServerConfig
 
+import java.util.concurrent.TimeUnit
 import scala.concurrent._
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.io.StdIn

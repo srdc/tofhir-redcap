@@ -1,9 +1,7 @@
 package io.tofhir.redcap.client
 
-import java.net.{ConnectException, UnknownHostException}
-
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{Multipart, _}
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.StreamTcpException
 import io.tofhir.redcap.Execution.actorSystem
@@ -12,6 +10,7 @@ import io.tofhir.redcap.model.json.Json4sSupport._
 import io.tofhir.redcap.model.{BadRequest, GatewayTimeout, Instrument, InternalRedCapError}
 import org.json4s.JsonAST.{JArray, JValue}
 
+import java.net.{ConnectException, UnknownHostException}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -28,7 +27,7 @@ class RedCapClient {
    * @param instrument The name of instrument to which record belongs to
    * @param projectId  The identifier of project to which record belongs to
    * @return record details as JValue
-   * @throws GatewayTimeout when it can not connect to REDCap to retrieve record details
+   * @throws GatewayTimeout      when it can not connect to REDCap to retrieve record details
    * @throws InternalRedCapError when it can not resolve the IP address of REDCAP API URL
    * */
   def exportRecord(token: String, recordId: String, instrument: String, projectId: String): Future[JValue] = {
@@ -48,11 +47,11 @@ class RedCapClient {
           val msg = entity.asInstanceOf[HttpEntity.Strict].data.utf8String
           throw BadRequest("Permission error!", s"Token for project '$projectId' does not have permission to export a REDCap record. The error message from REDCap Export Record API is $msg")
       }.recover {
-      case e: StreamTcpException => e.getCause match {
-        case e: ConnectException => throw GatewayTimeout("REDCap unavailable!", "Can not connect to REDCap to retrieve record details.", Some(e))
-        case e: UnknownHostException => throw InternalRedCapError("REDCap unavailable!", s"IP address of the given REDCap API URL '${e.getMessage}' could not be determined", Some(e))
+        case e: StreamTcpException => e.getCause match {
+          case e: ConnectException => throw GatewayTimeout("REDCap unavailable!", "Can not connect to REDCap to retrieve record details.", Some(e))
+          case e: UnknownHostException => throw InternalRedCapError("REDCap unavailable!", s"IP address of the given REDCap API URL '${e.getMessage}' could not be determined", Some(e))
+        }
       }
-    }
   }
 
   /**
@@ -62,7 +61,7 @@ class RedCapClient {
    * @param instrument The name of instrument to which records belong to
    * @param projectId  The identifier of project to which instrument belongs to
    * @return records as JArray
-   * @throws GatewayTimeout when it can not connect to REDCap
+   * @throws GatewayTimeout      when it can not connect to REDCap
    * @throws InternalRedCapError when it can not resolve the IP address of REDCAP API URL
    * */
   def exportRecords(token: String, instrument: String, projectId: String): Future[JArray] = {
@@ -77,11 +76,11 @@ class RedCapClient {
           val msg = entity.asInstanceOf[HttpEntity.Strict].data.utf8String
           throw BadRequest("Permission error!", s"Token for project '$projectId' does not have permission to export REDCap records. The error message from REDCap Export Record API is $msg")
       }.recover {
-      case e: StreamTcpException => e.getCause match {
-        case e: ConnectException => throw GatewayTimeout("REDCap unavailable!", "Can not connect to REDCap to export records.", Some(e))
-        case e: UnknownHostException => throw InternalRedCapError("REDCap unavailable!", s"IP address of the given REDCap API URL '${e.getMessage}' could not be determined", Some(e))
+        case e: StreamTcpException => e.getCause match {
+          case e: ConnectException => throw GatewayTimeout("REDCap unavailable!", "Can not connect to REDCap to export records.", Some(e))
+          case e: UnknownHostException => throw InternalRedCapError("REDCap unavailable!", s"IP address of the given REDCap API URL '${e.getMessage}' could not be determined", Some(e))
+        }
       }
-    }
   }
 
   /**
@@ -89,7 +88,7 @@ class RedCapClient {
    *
    * @param token The API token
    * @return the list of instruments
-   * @throws GatewayTimeout when it can not connect to REDCap
+   * @throws GatewayTimeout      when it can not connect to REDCap
    * @throws InternalRedCapError when it can not resolve the IP address of REDCAP API URL
    * */
   def exportInstruments(token: String): Future[Seq[Instrument]] = {
@@ -101,11 +100,11 @@ class RedCapClient {
         case HttpResponse(StatusCodes.OK, _, entity, _) =>
           Unmarshal(entity).to[Seq[Instrument]]
       }.recover {
-      case e: StreamTcpException => e.getCause match {
-        case e: ConnectException => throw GatewayTimeout("REDCap unavailable!", "Can not connect to REDCap to export instruments.", Some(e))
-        case e: UnknownHostException => throw InternalRedCapError("REDCap unavailable!", s"IP address of the given REDCap API URL '${e.getMessage}' could not be determined", Some(e))
+        case e: StreamTcpException => e.getCause match {
+          case e: ConnectException => throw GatewayTimeout("REDCap unavailable!", "Can not connect to REDCap to export instruments.", Some(e))
+          case e: UnknownHostException => throw InternalRedCapError("REDCap unavailable!", s"IP address of the given REDCap API URL '${e.getMessage}' could not be determined", Some(e))
+        }
       }
-    }
   }
 
   /**

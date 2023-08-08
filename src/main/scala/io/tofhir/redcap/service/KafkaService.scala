@@ -1,13 +1,13 @@
 package io.tofhir.redcap.service
 
-import java.util.Properties
-
 import com.typesafe.scalalogging.LazyLogging
 import io.tofhir.redcap.config.ToFhirRedCapConfig
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 import org.apache.kafka.common.serialization.StringSerializer
 import org.json4s.JsonAST.{JArray, JValue}
 import org.json4s.jackson.JsonMethods._
+
+import java.util.Properties
 
 /**
  * Service to publish a REDCap record to a Kafka topic.

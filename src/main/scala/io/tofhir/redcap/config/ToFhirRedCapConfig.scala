@@ -9,7 +9,6 @@ import io.tofhir.redcap.server.config.WebServerConfig
 object ToFhirRedCapConfig {
 
   import io.tofhir.redcap.Execution.actorSystem
-
   protected lazy val config: Config = actorSystem.settings.config
 
   /**

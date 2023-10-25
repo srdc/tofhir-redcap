@@ -1,8 +1,7 @@
 package io.tofhir.redcap.config
 
 import com.typesafe.config.Config
-
-import scala.jdk.CollectionConverters.ListHasAsScala
+import io.tofhir.redcap.server.config.WebServerConfig
 
 /**
  * Keeps the configurations of toFHIR-REDCap project
@@ -14,18 +13,13 @@ object ToFhirRedCapConfig {
   protected lazy val config: Config = actorSystem.settings.config
 
   /**
+   * Web server configurations
+   */
+  val webServerConfig = new WebServerConfig(config.getConfig("webserver"))
+  /**
    * REDCap configurations
    * */
-  lazy val redCapConfig: Config = config.getConfig("redcap")
-  /* REDCap API Url */
-  lazy val redCapUrl: String = redCapConfig.getString("url")
-  /* Whether REDCap records should be published to Kafka at the startup of server */
-  lazy val publishRecordsAtStartup: Boolean = redCapConfig.getBoolean("publishRecordsAtStartup")
-  /* Configuration of REDCap projects*/
-  lazy val redCapProjectsConfig: List[RedCapProjectConfig] = redCapConfig.getConfigList("projects")
-    .asScala
-    .map(config => new RedCapProjectConfig(config))
-    .toList
+  lazy val redCapConfig: RedCapConfig = new RedCapConfig(config.getConfig("redcap"))
 
   /**
    * Kafka configurations

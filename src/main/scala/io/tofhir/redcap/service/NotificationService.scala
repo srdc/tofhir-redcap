@@ -1,25 +1,26 @@
 package io.tofhir.redcap.service
 
 import com.typesafe.scalalogging.LazyLogging
+import io.tofhir.redcap.Execution.actorSystem.dispatcher
 import io.tofhir.redcap.client.RedCapClient
-import io.tofhir.redcap.config.{RedCapProjectConfig, ToFhirRedCapConfig}
-import io.tofhir.redcap.model.BadRequest
+import io.tofhir.redcap.config.RedCapConfig
+import io.tofhir.redcap.model.{BadRequest, Instrument, RedCapProjectConfig}
+import io.tofhir.redcap.service.project.IRedCapProjectConfigRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 /**
  * Service to handle a REDCap Notification which is sent by REDCap whenever a new record is created or an existing one is updated.
  * */
-class NotificationService extends LazyLogging {
+class NotificationService(redCapConfig: RedCapConfig, redCapProjectConfigRepository: IRedCapProjectConfigRepository) extends LazyLogging {
 
   // Kafka service to publish record to a Kafka topic
   val kafkaService: KafkaService = new KafkaService()
   // REDCap API client to export record details
-  val redCapClient: RedCapClient = new RedCapClient()
+  val redCapClient: RedCapClient = new RedCapClient(redCapConfig.redCapUrl)
 
   // handle 'redcap.publishRecordsAtStartup' configuration
-  if (ToFhirRedCapConfig.publishRecordsAtStartup) {
+  if (redCapConfig.publishRecordsAtStartup) {
     logger.info("'redcap.publishRecordsAtStartup' is enabled. Will export REDCap records and publish them to Kafka...")
     handleStartUpNotification()
   }
@@ -34,7 +35,7 @@ class NotificationService extends LazyLogging {
   def handleNotification(formDataFields: Map[String, String]): Future[Unit] = {
     // form data can be empty when the endpoint is tested while setting up Data Entry Trigger functionality of REDCap
     if (formDataFields.isEmpty) {
-      Future.successful()
+      Future {}
     }
     else {
       if (!formDataFields.contains(RedCapNotificationFormFields.RECORD) || !formDataFields.contains(RedCapNotificationFormFields.PROJECT_ID) || !formDataFields.contains(RedCapNotificationFormFields.INSTRUMENT))
@@ -42,11 +43,11 @@ class NotificationService extends LazyLogging {
       val recordId: String = formDataFields(RedCapNotificationFormFields.RECORD)
       val projectId: String = formDataFields(RedCapNotificationFormFields.PROJECT_ID)
       val instrument: String = formDataFields(RedCapNotificationFormFields.INSTRUMENT)
-      val token: String = getRedCapProjectToken(projectId)
-
-      redCapClient.exportRecord(token, recordId, instrument, projectId).map(record => {
-        kafkaService.publishRedCapRecord(getTopicName(projectId, instrument), record, Some(recordId))
-      })
+      getRedCapProjectToken(projectId) flatMap { token: String =>
+        redCapClient.exportRecord(token, recordId, instrument, projectId) map { record =>
+          kafkaService.publishRedCapRecord(getTopicName(projectId, instrument), record, Some(recordId))
+        }
+      }
     }
   }
 
@@ -57,31 +58,34 @@ class NotificationService extends LazyLogging {
    * @return API token for the project
    * @throws BadRequest if there is no configuration for the given project
    * */
-  private def getRedCapProjectToken(projectId: String): String = {
-    val projectConfig: Option[RedCapProjectConfig] = ToFhirRedCapConfig.redCapProjectsConfig.find(p => p.id.contentEquals(projectId))
-    if (projectConfig.isEmpty)
-      throw BadRequest("Invalid Project !", s"Project configuration is missing for project '$projectId'")
-    projectConfig.get.token
+  private def getRedCapProjectToken(projectId: String): Future[String] = {
+    redCapProjectConfigRepository.getProject(projectId) map { projectConfig: Option[RedCapProjectConfig] =>
+      if (projectConfig.isEmpty)
+        throw BadRequest("Invalid Project !", s"Project configuration is missing for project '$projectId'")
+      projectConfig.get.token
+    }
   }
 
   /**
    * This is the method to be called at the startup of server if we would like to retrieve all REDCap records and publish
    * them to Kafka.
    */
-  private def handleStartUpNotification(): Unit = {
+  private def handleStartUpNotification(): Future[Unit] = {
     // traverse the configured projects to publish their data to Kafka
-    ToFhirRedCapConfig.redCapProjectsConfig.foreach(projectConfig => {
-      // export project instruments
-      redCapClient.exportInstruments(projectConfig.token).map(instruments => {
-        // for each instrument export records
-        instruments.foreach(instrument => {
-          redCapClient.exportRecords(projectConfig.token, instrument.instrument_name, projectConfig.id).map(records => {
-            // publish them to Kafka
-            kafkaService.publishRedCapRecords(getTopicName(projectConfig.id, instrument.instrument_name), records)
-          })
-        })
-      })
-    })
+    redCapProjectConfigRepository.getAllProjects flatMap { redCapProjects: Seq[RedCapProjectConfig] =>
+      Future.sequence(
+        redCapProjects.map { projectConfig =>
+          redCapClient.exportInstruments(projectConfig.token) flatMap { instruments: Seq[Instrument] =>
+            Future.sequence(instruments.map { instrument =>
+              redCapClient.exportRecords(projectConfig.token, instrument.instrument_name, projectConfig.id) map { records =>
+                // publish them to Kafka
+                kafkaService.publishRedCapRecords(getTopicName(projectConfig.id, instrument.instrument_name), records)
+              }
+            })
+          }
+        }
+      )
+    } map { _ => } // Get rid of all inner objects since we do not need them
   }
 
   /**

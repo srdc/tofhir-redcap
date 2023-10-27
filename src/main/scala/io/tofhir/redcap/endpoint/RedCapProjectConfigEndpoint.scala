@@ -46,5 +46,5 @@ class RedCapProjectConfigEndpoint(redcapProjectConfigRepository: IRedCapProjectC
 }
 
 object RedCapProjectConfigEndpoint {
-  val SEGMENT_PROJECT_CONFIG= "project"
+  val SEGMENT_PROJECT_CONFIG= "projects"
 }

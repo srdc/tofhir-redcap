@@ -102,6 +102,18 @@
     </build>
 
     <dependencies>
+        <!-- Scala Library itself-->
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+        </dependency>
+
+        <!-- Scala Logging -->
+        <dependency>
+            <groupId>com.typesafe.scala-logging</groupId>
+            <artifactId>scala-logging_${scala.binary.version}</artifactId>
+        </dependency>
+
         <!-- Akka HTTP Suite -->
         <dependency>
             <groupId>com.typesafe.akka</groupId>
@@ -109,34 +121,48 @@
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-http-core_${scala.binary.version}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-http-caching_${scala.binary.version}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-actor-typed_${scala.binary.version}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-stream-typed_${scala.binary.version}</artifactId>
         </dependency>
-        <!-- Scala Logging -->
-        <dependency>
-            <groupId>com.typesafe.scala-logging</groupId>
-            <artifactId>scala-logging_${scala.binary.version}</artifactId>
-        </dependency>
+
         <!-- Kafka -->
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
-            <version>2.7.0</version>
+            <version>3.3.2</version>
         </dependency>
+
         <!-- Logback dependencies -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
         </dependency>
+
         <!-- JSON4S -->
         <dependency>
             <groupId>org.json4s</groupId>
             <artifactId>json4s-jackson_${scala.binary.version}</artifactId>
-            <version>${json4s.version}</version>
         </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
             <artifactId>json4s-ext_${scala.binary.version}</artifactId>
-            <version>${json4s.version}</version>
+        </dependency>
+
+        <!-- onFHIR Common -->
+        <dependency>
+            <groupId>io.onfhir</groupId>
+            <artifactId>onfhir-common_${scala.binary.version}</artifactId>
         </dependency>
     </dependencies>
 </project>

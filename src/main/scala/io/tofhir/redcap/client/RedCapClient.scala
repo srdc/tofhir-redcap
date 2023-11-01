@@ -5,7 +5,6 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.StreamTcpException
 import io.tofhir.redcap.Execution.actorSystem
-import io.tofhir.redcap.config.ToFhirRedCapConfig
 import io.tofhir.redcap.model.json.Json4sSupport._
 import io.tofhir.redcap.model.{BadRequest, GatewayTimeout, Instrument, InternalRedCapError}
 import org.json4s.JsonAST.{JArray, JValue}
@@ -17,7 +16,7 @@ import scala.concurrent.Future
 /**
  * Client to make use of REDCap API.
  * */
-class RedCapClient {
+class RedCapClient(redCapUrl: String) {
 
   /**
    * Exports the details of a REDCap record.
@@ -149,7 +148,7 @@ class RedCapClient {
       }
 
     HttpRequest(
-      uri = s"${ToFhirRedCapConfig.redCapUrl}",
+      uri = redCapUrl,
       method = HttpMethods.POST,
       entity = Multipart.FormData(bodyParts: _*).toEntity
     )

@@ -35,6 +35,12 @@ fi
 if [ ! -z "$REDCAP_URL" ]; then
     JAVA_CMD+="-Dredcap.url=$REDCAP_URL "
 fi
+if [ ! -z "$REDCAP_PUBLISH_RECORDS_ATSTARTUP" ]; then
+    JAVA_CMD+="-Dredcap.publishRecordsAtStartup=$REDCAP_PUBLISH_RECORDS_ATSTARTUP "
+fi
+if [ ! -z "$REDCAP_PROJECTS_FILEPATH" ]; then
+    JAVA_CMD+="-Dredcap.projects.filePath=$REDCAP_PROJECTS_FILEPATH "
+fi
 
 # Delay the execution for this amount of seconds
 if [ ! -z "$DELAY_EXECUTION" ]; then

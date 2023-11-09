@@ -53,7 +53,7 @@ class RedCapProjectConfigFileRepository(redCapProjectsFilePath: String) extends 
   /**
    * Save projects to the repository.
    *
-   * @param projects projects to be saved
+   * @param updatedProjects projects to be saved
    * @return saved projects
    */
   override def saveProjects(updatedProjects: Seq[RedCapProjectConfig]): Future[Seq[RedCapProjectConfig]] = {
@@ -62,6 +62,8 @@ class RedCapProjectConfigFileRepository(redCapProjectsFilePath: String) extends 
       val fw = new FileWriter(file)
       try {
         fw.write(serialization.writePretty(updatedProjects))
+        // clear the cache and populate it with the new projects
+        projectConfigs.clear()
         updatedProjects.map(pr => projectConfigs.put(pr.id, pr))
         updatedProjects
       }

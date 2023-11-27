@@ -86,8 +86,8 @@ Here is the list of available configurations:
         <td> false </td>
      </tr>
     <tr>
-        <td> redcap.projects </td>
-        <td>The configuration of REDCap projects. Each project configuration should include the project id and API token. For example:
+        <td> redcap.projects.filePath </td>
+        <td> Path to the file where the configuration of REDCap projects are read. Each project configuration should include the project id and API token. For example:
      
  ```json
  [
@@ -98,6 +98,6 @@ Here is the list of available configurations:
 ]
  ```
  </td>
-<td> [] </td>
+<td> redcap-projects.json </td>
  </tr>
 </table>

@@ -16,7 +16,7 @@ class ToFhirRedCapServerEndpoint(webServerConfig: WebServerConfig, redCapConfig:
   private val redcapProjectConfigRepository = new RedCapProjectConfigFileRepository(redCapConfig.redcapProjectsFilePath)
 
   private val notificationEndpoint = new NotificationEndpoint(webServerConfig, redCapConfig, redcapProjectConfigRepository)
-  private val redCapProjectConfigEndpoint = new RedCapProjectConfigEndpoint(redcapProjectConfigRepository)
+  private val redCapProjectConfigEndpoint = new RedCapProjectConfigEndpoint(redCapConfig, redcapProjectConfigRepository)
 
   lazy val toFHIRRoute: Route =
     pathPrefix(webServerConfig.baseUri) {

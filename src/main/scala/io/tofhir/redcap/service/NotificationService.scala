@@ -45,7 +45,7 @@ class NotificationService(redCapConfig: RedCapConfig, redCapProjectConfigReposit
       val instrument: String = formDataFields(RedCapNotificationFormFields.INSTRUMENT)
       getRedCapProjectToken(projectId) flatMap { token: String =>
         redCapClient.exportRecord(token, recordId, instrument, projectId) map { record =>
-          kafkaService.publishRedCapRecord(getTopicName(projectId, instrument), record, Some(recordId))
+          kafkaService.publishRedCapRecord(KafkaTopicManager.getTopicName(projectId, instrument), record, Some(recordId))
         }
       }
     }
@@ -79,25 +79,13 @@ class NotificationService(redCapConfig: RedCapConfig, redCapProjectConfigReposit
             Future.sequence(instruments.map { instrument =>
               redCapClient.exportRecords(projectConfig.token, instrument.instrument_name, projectConfig.id) map { records =>
                 // publish them to Kafka
-                kafkaService.publishRedCapRecords(getTopicName(projectConfig.id, instrument.instrument_name), records)
+                kafkaService.publishRedCapRecords(KafkaTopicManager.getTopicName(projectConfig.id, instrument.instrument_name), records)
               }
             })
           }
         }
       )
     } map { _ => } // Get rid of all inner objects since we do not need them
-  }
-
-  /**
-   * Returns the Kafka topic name for the given project and instrument. Project id and instrument name are concatenated
-   * to create a unique topic name.
-   *
-   * @param projectId  the identifier of REDCap project
-   * @param instrument the name of instrument
-   * @return the corresponding Kafka topic name
-   * */
-  private def getTopicName(projectId: String, instrument: String): String = {
-    s"$projectId-$instrument"
   }
 }
 

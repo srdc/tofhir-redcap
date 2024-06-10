@@ -15,6 +15,13 @@
     <packaging>jar</packaging>
 
     <build>
+        <!-- Generated the version.properties file in the target -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <sourceDirectory>src/main/scala</sourceDirectory>
         <plugins>
             <!-- Allows compiling/testing/running/documenting Scala code in Maven. -->

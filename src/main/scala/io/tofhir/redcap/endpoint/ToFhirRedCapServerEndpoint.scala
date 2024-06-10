@@ -17,6 +17,7 @@ class ToFhirRedCapServerEndpoint(webServerConfig: WebServerConfig, redCapConfig:
 
   private val notificationEndpoint = new NotificationEndpoint(webServerConfig, redCapConfig, redcapProjectConfigRepository)
   private val redCapProjectConfigEndpoint = new RedCapProjectConfigEndpoint(redCapConfig, redcapProjectConfigRepository)
+  private val metadataEndpoint = new MetadataEndpoint()
 
   lazy val toFHIRRoute: Route =
     pathPrefix(webServerConfig.baseUri) {
@@ -27,7 +28,7 @@ class ToFhirRedCapServerEndpoint(webServerConfig: WebServerConfig, redCapConfig:
               optionalHeaderValueByName("X-Correlation-Id") { _ =>
                 handleRejections(RejectionHandler.default) { // Default rejection handling
                   handleExceptions(exceptionHandler()) { // Handle exceptions
-                    notificationEndpoint.route() ~ redCapProjectConfigEndpoint.route()
+                    notificationEndpoint.route() ~ redCapProjectConfigEndpoint.route() ~ metadataEndpoint.route()
                   }
                 }
               }

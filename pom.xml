@@ -15,6 +15,12 @@
     <packaging>jar</packaging>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <sourceDirectory>src/main/scala</sourceDirectory>
         <plugins>
             <!-- Allows compiling/testing/running/documenting Scala code in Maven. -->

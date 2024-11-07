@@ -16,7 +16,7 @@ import scala.util.Success
 
 class RedCapProjectConfigEndpoint(redCapConfig: RedCapConfig, redcapProjectConfigRepository: IRedCapProjectConfigRepository) {
 
-  private val kafkaTopicManager: KafkaTopicManager = new KafkaTopicManager(redCapConfig, redcapProjectConfigRepository: IRedCapProjectConfigRepository)
+  private val kafkaTopicManager: KafkaTopicManager = new KafkaTopicManager(redCapConfig, redcapProjectConfigRepository)
 
   def route(): Route = {
     pathPrefix(SEGMENT_PROJECT_CONFIG) {

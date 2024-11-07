@@ -20,9 +20,6 @@ class KafkaTopicManager(redCapConfig: RedCapConfig, redcapProjectConfigRepositor
   // cache to keep existing Kafka topics
   private val topicsCache: mutable.Set[String] = mutable.Set(kafkaService.getTopics.toSeq: _*)
 
-  // create Kafka topics for the configured REDCap projects at the initialization
-  createTopicsForInstruments()
-
   /**
    * Creates Kafka topics for instruments in multiple RedCap projects and updates the topics cache.
    *

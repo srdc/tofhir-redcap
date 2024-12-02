@@ -82,7 +82,7 @@ Here is the list of available configurations:
     </tr>
     <tr>
         <td> redcap.publishRecordsAtStartup </td> 
-        <td> Flag to export REDCap records and publish them to Kafka at the startup of server. Only records from the configured projects will be exported </td>
+        <td> Flag to export REDCap records and publish them to Kafka at the startup of server. Only records from the configured projects will be exported. Existing data in the Kafka topics will be deleted before publishing new records to avoid duplication.</td>
         <td> false </td>
      </tr>
     <tr>

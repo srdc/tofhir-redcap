@@ -27,15 +27,24 @@ class KafkaTopicManager(redCapConfig: RedCapConfig, redcapProjectConfigRepositor
   /**
    * Initializes Kafka topics for the configured REDCap projects during startup.
    *
-   * This method performs two key actions:
-   * 1. Creates Kafka topics based on the configured REDCap projects.
-   * 2. If the `publishRecordsAtStartup` configuration is enabled, it exports all REDCap records
-   * and publishes them to the corresponding Kafka topics.
+   * This method performs the following key actions:
+   * 1. If the `publishRecordsAtStartup` configuration is enabled,
+   * it deletes all existing Kafka topics to prevent duplication of records.
+   * 2. Creates Kafka topics based on the configured REDCap projects.
+   * 3. If `publishRecordsAtStartup` is enabled, it exports all REDCap records
+   * and publishes them to the corresponding Kafka topics for processing.
    *
-   * @return A `Future[Unit]` that completes when all Kafka topics are initialized
+   * @return A `Future[Unit]` that completes when all Kafka topics are initialized,
    *         and records are published if required.
    */
   def initializeTopics(): Future[Unit] = {
+    // Delete existing topics to prevent duplication of records
+    if (redCapConfig.publishRecordsAtStartup) {
+      logger.info("'redcap.publishRecordsAtStartup' is enabled. Will delete existing Kafka topics...")
+      kafkaService.deleteAllTopics()
+      topicsCache.clear() // Clear cached topic information
+    }
+    // Create Kafka topics and optionally publish REDCap records
     createTopicsForInstruments().flatMap { _ =>
       if (redCapConfig.publishRecordsAtStartup) {
         logger.info("'redcap.publishRecordsAtStartup' is enabled. Will export REDCap records and publish them to Kafka...")

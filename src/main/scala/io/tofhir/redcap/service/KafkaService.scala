@@ -7,7 +7,7 @@ import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 import org.apache.kafka.common.serialization.StringSerializer
 import org.json4s.JsonAST.{JArray, JValue}
 import org.json4s.jackson.JsonMethods._
-
+import scala.jdk.CollectionConverters._
 import java.util
 import java.util.Properties
 import scala.jdk.CollectionConverters.{MapHasAsScala, SeqHasAsJava, SetHasAsScala}
@@ -101,6 +101,32 @@ class KafkaService extends LazyLogging {
         adminClient.close()
       } catch {
         case ex: Exception => logger.error(s"Failed to close admin client: ${ex.getMessage}")
+      }
+    }
+  }
+
+  /**
+   * Deletes all existing Kafka topics in the configured Kafka cluster.
+   *
+   * This method retrieves the list of all available Kafka topics and deletes them using the Kafka `AdminClient`.
+   * It ensures that the `AdminClient` is properly closed after the operation.
+   */
+  def deleteAllTopics(): Unit = {
+    // Fetch the set of all topics
+    val topics: Set[String] = getTopics
+    if (topics.nonEmpty) {
+      // Create an AdminClient for managing Kafka topics
+      val adminClient: AdminClient = createAdminClient()
+      try {
+        // Delete the topics
+        adminClient.deleteTopics(topics.asJava).all().get()
+      } catch {
+        case e: Exception =>
+          logger.error("Failed to delete topics")
+          throw e
+      } finally {
+        // Ensure the AdminClient is closed
+        adminClient.close()
       }
     }
   }

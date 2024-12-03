@@ -7,7 +7,7 @@ import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 import org.apache.kafka.common.serialization.StringSerializer
 import org.json4s.JsonAST.{JArray, JValue}
 import org.json4s.jackson.JsonMethods._
-
+import scala.jdk.CollectionConverters._
 import java.util
 import java.util.Properties
 import scala.jdk.CollectionConverters.{MapHasAsScala, SeqHasAsJava, SetHasAsScala}
@@ -101,6 +101,46 @@ class KafkaService extends LazyLogging {
         adminClient.close()
       } catch {
         case ex: Exception => logger.error(s"Failed to close admin client: ${ex.getMessage}")
+      }
+    }
+  }
+
+  /**
+   * Deletes Kafka topics in the configured Kafka cluster.
+   *
+   * Depending on the `projectId` provided, this method either deletes all topics or only the topics related to the specified project.
+   * It retrieves the list of available Kafka topics and deletes them using the Kafka `AdminClient`.
+   * Ensures that the `AdminClient` is properly closed after the operation to release resources.
+   *
+   * @param projectId Optional project ID to filter topics for deletion. If provided, only topics related to the project are deleted.
+   *                  If not provided, all topics in the Kafka cluster will be deleted.
+   */
+  def deleteTopics(projectId: Option[String] = None): Unit = {
+    // Fetch all available topics from Kafka
+    val allTopics: Set[String] = getTopics
+
+    // Determine which topics to delete based on the provided project ID
+    val topicsToBeDeleted: Set[String] = projectId match {
+      // Filter topics by project ID if provided
+      case Some(id) => allTopics.filter(topic => topic.startsWith(KafkaTopicManager.getTopicPrefix(id)))
+      // Delete all topics if no project ID is specified
+      case None => allTopics
+    }
+
+    // Proceed only if there are topics to delete
+    if (topicsToBeDeleted.nonEmpty) {
+      // Create an AdminClient for managing Kafka topics
+      val adminClient: AdminClient = createAdminClient()
+      try {
+        // Attempt to delete the selected topics
+        adminClient.deleteTopics(topicsToBeDeleted.asJava).all().get()
+      } catch {
+        case e: Exception =>
+          logger.error("Failed to delete Kafka topics")
+          throw e
+      } finally {
+        // Ensure the AdminClient is closed
+        adminClient.close()
       }
     }
   }

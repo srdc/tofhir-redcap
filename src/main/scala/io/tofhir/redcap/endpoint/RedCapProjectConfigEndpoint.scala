@@ -81,7 +81,7 @@ class RedCapProjectConfigEndpoint(redCapConfig: RedCapConfig, redcapProjectConfi
         complete {
           val reload = reloadParam.contains("true")
           // Ensure we await the result of the initialization before responding
-          kafkaTopicManager.initializeTopics(deleteTopics = true, publishRecords = reload, projectId = projectId).map { _ =>
+          kafkaTopicManager.initializeTopics(deleteTopics = !reload, publishRecords = reload, projectId = projectId).map { _ =>
             // Return success once the operation is completed
             StatusCodes.OK
           }

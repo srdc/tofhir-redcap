@@ -36,6 +36,10 @@ abstract class ToFhirRedCapError extends Exception {
       s"Stack Trace: ${if (cause.isDefined) getStackTraceAsString(cause.get)}"
   }
 
+  override def getMessage: String = {
+    s"$title $detail"
+  }
+
   private def getStackTraceAsString(t: Throwable) = {
     val sw = new StringWriter
     t.printStackTrace(new PrintWriter(sw))

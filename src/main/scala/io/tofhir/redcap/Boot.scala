@@ -7,6 +7,8 @@ import io.tofhir.redcap.server.ToFhirRedCapServer
 import io.tofhir.redcap.service.KafkaTopicManager
 import io.tofhir.redcap.service.project.RedCapProjectConfigFileRepository
 
+import scala.util.{Failure, Success}
+
 /**
  * Entrypoint of the application
  */
@@ -25,8 +27,12 @@ object Boot extends App with LazyLogging {
 
   // Create Kafka topics for each configured REDCap project, passing the flag to control the topic initialization and record publishing
   kafkaTopicManager.initializeTopics(publishRecordsAtStartup, publishRecordsAtStartup)
-    .map { _ =>
-      // Once Kafka topics are successfully initialized, start the ToFHIR REDCap server
-      ToFhirRedCapServer.start()
+    .onComplete {
+      case Failure(ex) =>
+        logger.error("Kafka topic initialization failed. Halting application", ex)
+        System.exit(1)
+      case Success(_) =>
+        // Once Kafka topics are successfully initialized, start the ToFHIR REDCap server
+        ToFhirRedCapServer.start()
     }
 }
